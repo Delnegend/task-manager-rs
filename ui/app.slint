@@ -1,0 +1,77 @@
+import { ListView, Button, StandardListView, VerticalBox } from "std-widgets.slint";
+import { Process, ProcessProps, ColWidth } from "components/process.slint";
+
+export global AppWindowState {
+    in-out property <[ProcessProps]> procs: [];
+}
+
+export component AppWindow inherits Window {
+    title: "Task Manager";
+    preferred-width: 800px;
+    preferred-height: 600px;
+    // min-width: 600px;
+    // min-height: 400px;
+
+    // VerticalLayout {
+    //     HorizontalLayout {
+    //         width: parent.width;
+
+    //         Text {
+    //             text: "Name";
+    //             color: #555555;
+    //             font-weight: 500;
+    //             width: parent.width > 0 ? parent.width - ColWidth.all-except-name : 0px;
+    //         }
+
+    //         Text {
+    //             text: "PID";
+    //             color: #555555;
+    //             font-weight: 500;
+    //             width: ColWidth.pid;
+    //         }
+
+    //         Text {
+    //             text: "PPID";
+    //             color: #555555;
+    //             font-weight: 500;
+    //             width: ColWidth.ppid;
+    //         }
+
+    //         Text {
+    //             text: "State";
+    //             color: #555555;
+    //             font-weight: 500;
+    //             width: ColWidth.state;
+    //         }
+
+    //         Text {
+    //             text: "User";
+    //             color: #555555;
+    //             font-weight: 500;
+    //             width: ColWidth.user;
+    //         }
+
+    //         Text {
+    //             text: "Start Time";
+    //             color: #555555;
+    //             font-weight: 500;
+    //             width: ColWidth.start-time;
+    //         }
+
+    //         Text {
+    //             text: "Command";
+    //             color: #555555;
+    //             font-weight: 500;
+    //             width: ColWidth.command;
+    //         }
+    //     }
+
+    // }
+    VerticalLayout {
+        ListView {
+            for process in AppWindowState.procs: Process {
+                process: process;
+            }
+        }
+    }
+}
