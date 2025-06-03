@@ -1,0 +1,41 @@
+{
+    "name": "task-manager-rs",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "runArgs": [
+        "-v",
+        "cargo-cache:/usr/local/cargo",
+        // {
+        // 	"source": "global-pnpm-store",
+        // 	"target": "/home/vscode/.pnpm-store",
+        // 	"type": "volume"
+        // }
+        "-v",
+        "global-pnpm-store:/home/tmrs/.pnpm-store",
+        "-v",
+        "${localEnv:XDG_RUNTIME_DIR}/${localEnv:WAYLAND_DISPLAY}:/tmp/wayland-0",
+        "-v",
+        "/tmp/.X11-unix:/tmp/.X11-unix",
+        "--device",
+        "/dev/dri:/dev/dri"
+    ],
+    "containerEnv": {
+        "WAYLAND_DISPLAY": "wayland-0",
+        "XDG_RUNTIME_DIR": "/tmp",
+        "QT_QPA_PLATFORM": "wayland",
+        "MOZ_ENABLE_WAYLAND": "1",
+        "SDL_VIDEODRIVER": "wayland",
+        "QT_PLUGIN_PATH": "/usr/lib/x86_64-linux-gnu/qt6/plugins"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "rust-lang.rust-analyzer",
+                "myriad-dreamin.tinymist",
+                "Slint.slint"
+            ]
+        }
+    },
+    "postCreateCommand": "zsh .devcontainer/postinstall.sh"
+}
