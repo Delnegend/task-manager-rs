@@ -6,11 +6,6 @@
     "runArgs": [
         "-v",
         "cargo-cache:/usr/local/cargo",
-        // {
-        // 	"source": "global-pnpm-store",
-        // 	"target": "/home/vscode/.pnpm-store",
-        // 	"type": "volume"
-        // }
         "-v",
         "global-pnpm-store:/home/tmrs/.pnpm-store",
         "-v",
