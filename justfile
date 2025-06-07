@@ -62,3 +62,6 @@ install-font:
 
 dev:
     cargo run
+
+test:
+    cargo test
