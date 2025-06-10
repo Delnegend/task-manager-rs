@@ -1,44 +1,143 @@
-import "./IosevkaNerdFont-Regular.ttf";
-import { StandardTableView } from "std-widgets.slint";
+import { StandardTableView, StandardListView, StandardButton, Button } from "std-widgets.slint";
 
 export global AppWindowState {
-    in-out property <[[StandardListViewItem]]> procs: [];
+    in property <[[StandardListViewItem]]> procs: [];
+    in-out property <string> to-be-terminated-process: "";
 }
 
 export component AppWindow inherits Window {
     callback row-pointer-event(int, PointerEvent, Point);
     callback sort-ascending(int);
     callback sort-descending(int);
+    callback search-query-changed(string);
+    callback request-terminate-process(int);
+    callback confirm-terminate-process();
+
+    private property <int> selected-process-idx: -1;
 
     title: "Task Manager";
-    preferred-width: 800px;
-    preferred-height: 600px;
-    default-font-family: "Iosevka NF";
+    min-width: 800px;
+    preferred-width: 1200px;
+    max-height: 1080px;
+    max-width: 1920px;
+    min-height: 600px;
+    preferred-height: 800px;
+    resize-border-width: 4px;
 
-    StandardTableView {
-        width: parent.width;
-        height: parent.height;
-        row-pointer-event(row, event, position) => {
-            root.row-pointer-event(row, event, position);
+    confirm-terminate-popup := PopupWindow {
+        x: (root.width - self.width) / 8;
+        y: (root.height - self.height) / 2;
+
+        Rectangle {
+            border-color: black;
+            border-width: 1px;
+            border-radius: 4px;
+            background: white;
+
+            VerticalLayout {
+                padding: 16px;
+                alignment: center;
+
+                Text {
+                    text: "Are you sure you want to terminate this process?\n" + AppWindowState.to-be-terminated-process;
+                    font-size: 16px;
+                }
+
+                HorizontalLayout {
+                    alignment: end;
+                    spacing: 8px;
+                    padding-top: 16px;
+
+                    StandardButton {
+                        kind: abort;
+                        clicked => {
+                            confirm-terminate-popup.close();
+                        }
+                    }
+
+                    StandardButton {
+                        kind: yes;
+                        clicked => {
+                            confirm-terminate-popup.close();
+                            confirm-terminate-process();
+                        }
+                    }
+                }
+            }
         }
-        sort-ascending(column) => {
-            root.sort-ascending(column);
-        }
-        sort-descending(column) => {
-            root.sort-descending(column);
+    }
+
+    VerticalLayout {
+        private property <length> top-bar-height: 48px;
+        private property <length> pad-horizontal: 12px;
+        alignment: start;
+
+        Rectangle {
+            height: top-bar-height;
+            preferred-width: 100%;
+            border-color: black;
+            border-width: 1px;
+            border-radius: 4px;
+
+            HorizontalLayout {
+                alignment: start;
+                padding-left: pad-horizontal;
+                padding-right: pad-horizontal;
+                padding-top: 8px;
+                padding-bottom: 8px;
+
+                TextInput {
+                    width: parent.width - 100px - pad-horizontal * 2;
+                    vertical-alignment: center;
+                    accessible-placeholder-text: "Search processes";
+                    font-size: 16px;
+                    edited => {
+                        search-query-changed(self.text);
+                    }
+                }
+
+                Button {
+                    width: 100px;
+                    text: "Terminate";
+                    enabled: root.selected-process-idx != -1;
+                    primary: true;
+                    clicked => {
+                        request-terminate-process(root.selected-process-idx);
+                        confirm-terminate-popup.show();
+                    }
+                }
+            }
         }
 
-        columns: [
-            { title: "Name" },
-            { title: "ID" },
-            { title: "CPU" },
-            { title: "Memory" },
-            { title: "PPID" },
-            { title: "State" },
-            { title: "Start Time" },
-            { title: "User" },
-            { title: "Command" }
-        ];
-        rows: AppWindowState.procs;
+        StandardTableView {
+            width: parent.width;
+            height: parent.height - top-bar-height;
+            row-pointer-event(row, event, position) => {
+                root.row-pointer-event(row, event, position);
+                if (event.kind == PointerEventKind.down) {
+                    root.selected-process-idx = row;
+                }
+            }
+            sort-ascending(column) => {
+                root.sort-ascending(column);
+            }
+            sort-descending(column) => {
+                root.sort-descending(column);
+            }
+
+            columns: [
+                { title: "Name" },
+                { title: "ID" },
+                { title: "CPU" },
+                { title: "Memory" },
+                { title: "Parent ID" },
+                { title: "State" },
+                { title: "Start Time" },
+                { title: "User" },
+                { title: "Command" }
+            ];
+
+            rows: AppWindowState.procs;
+        }
     }
 }
