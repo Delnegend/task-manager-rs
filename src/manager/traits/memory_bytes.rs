@@ -7,7 +7,11 @@ pub trait MemoryBytes {
 impl MemoryBytes for Process {
     fn memory_bytes(&self) -> u64 {
         self.statm()
-            .map(|s| s.resident * 4096) // Convert pages to bytes
+            .map(|s| {
+                s.resident
+                    .saturating_sub(s.shared)
+                    .saturating_mul(procfs::page_size())
+            }) // Convert pages to bytes
             .unwrap_or(0)
     }
 }
