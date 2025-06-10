@@ -41,5 +41,8 @@ echo 'export VOLTA_HOME="$HOME/.volta"' >> ~/.zshrc
 echo 'export PATH="$VOLTA_HOME/bin:$PATH"' >> ~/.zshrc
 volta install node@lts pnpm && pnpm config set store-dir ~/.pnpm-store
 
+curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+yes | cargo binstall cargo-deb cargo-generate-rpm
+
 just install-mold
 just install-font
