@@ -3,7 +3,7 @@ FROM debian:12
 RUN apt-get update && apt-get install -y \
     meson ninja-build nasm clang \
     pkg-config libssl-dev \
-    curl git zsh sudo fontconfig qt6-wayland && apt-get clean
+    curl git zsh sudo fontconfig && apt-get clean
 
 RUN groupadd -g 1000 tmrs && \
     useradd -m -u 1000 -g tmrs tmrs && \
