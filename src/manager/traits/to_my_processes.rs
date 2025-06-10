@@ -4,9 +4,8 @@ use tracing::warn;
 use crate::manager::{
     MyProcess,
     traits::{
-        command_string::CommandString, cpu_percent::CpuPercent,
-        get_procs_using_file::GetUsingFiles, memory_bytes::MemoryBytes, process_name::ProcessName,
-        username::Username,
+        command_string::CommandString, cpu_percent::CpuPercent, get_using_files::GetUsingFiles,
+        memory_bytes::MemoryBytes, process_name::ProcessName, username::Username,
     },
 };
 
