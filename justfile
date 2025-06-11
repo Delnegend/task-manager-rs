@@ -34,28 +34,20 @@ install-font:
         exit 1
     fi
 
-    # Ensure the target font directory exists
     echo "Ensuring font directory $target_font_dir exists..."
     sudo mkdir -p "$target_font_dir"
 
-    # Check if there are any .ttf files to install
-    # We use -print -quit to find the first match and exit find quickly.
-    # grep -q . checks if find produced any output (i.e., found at least one file).
+
     if ! find "$source_dir" -type f -name "*.ttf" -print -quit | grep -q .; then
         echo "No .ttf font files found in '$source_dir'."
         exit 0
     fi
 
     echo "Installing .ttf fonts from '$source_dir' to '$target_font_dir'..."
-    # Use find to locate all .ttf files and execute cp for them.
-    # 'sudo cp' is used as font directories are typically system-wide and require root privileges.
-    # -v option for cp provides verbose output (prints names of copied files).
-    # -t option for cp specifies the target directory.
-    # {} + syntax passes multiple found files as arguments to a single cp command, which is more efficient.
+
     find "$source_dir" -type f -name "*.ttf" -exec sudo cp -v -t "$target_font_dir/" {} +
 
     echo "Updating font cache..."
-    # -f forces re-generation of caches, -v provides verbose output.
     sudo fc-cache -f -v
 
     echo "Font installation complete."
