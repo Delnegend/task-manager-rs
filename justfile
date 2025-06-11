@@ -57,3 +57,78 @@ dev:
 
 test:
     cargo test
+
+lint:
+    cargo fmt && cargo clippy
+
+build-release:
+    cargo build --release
+
+package-rpm: build-release
+    @mkdir -p ./dist
+    cargo generate-rpm
+    @find target/generate-rpm -name "*.rpm" -exec mv {} ./dist/ \;
+    @echo "RPM package moved to ./dist/"
+
+package-deb: build-release
+    @mkdir -p ./dist
+    cargo deb
+    @find target/debian/ -name "*.deb" -exec mv {} ./dist/ \;
+    @echo "DEB package moved to ./dist/"
+
+test-keep-file:
+    #!/usr/bin/env bash
+
+    if [ ! -f /tmp/example.txt ]; then
+        echo "Creating /tmp/example.txt"
+        echo "This is a test file." > /tmp/example.txt
+    fi
+    TARGET_FILE="/tmp/example.txt"
+
+    # --- Method 1: Redirecting output to a file descriptor ---
+    # This opens the file for writing and assigns it to file descriptor 3.
+    # The 'exec' command is used to permanently redirect the descriptor for the current shell.
+    echo "--- Method 1: Opening for writing with exec (FD 3) ---"
+    exec 3> "$TARGET_FILE"
+    echo "This line is written to $TARGET_FILE via FD 3." >&3
+    echo "File '$TARGET_FILE' is now open for writing on FD 3."
+    echo "You can check with 'lsof -p $$' in another terminal."
+    sleep 10
+    exec 3>&- # Close file descriptor 3
+
+    echo ""
+
+    # --- Method 2: Opening for reading with exec ---
+    # This opens the file for reading and assigns it to file descriptor 4.
+    echo "--- Method 2: Opening for reading with exec (FD 4) ---"
+    echo "Some content for reading." > "$TARGET_FILE" # Ensure file has content
+    exec 4< "$TARGET_FILE"
+    echo "File '$TARGET_FILE' is now open for reading on FD 4."
+    echo "You can check with 'lsof -p $$' in another terminal."
+    sleep 10
+    exec 4>&- # Close file descriptor 4
+
+    echo ""
+
+    # --- Method 3: Opening for both reading and writing (FD 5) ---
+    # This opens the file for both reading and writing and assigns it to FD 5.
+    echo "--- Method 3: Opening for reading and writing with exec (FD 5) ---"
+    exec 5<> "$TARGET_FILE"
+    echo "File '$TARGET_FILE' is now open for reading and writing on FD 5."
+    echo "You can check with 'lsof -p $$' in another terminal."
+    sleep 10
+    exec 5>&- # Close file descriptor 5
+
+    echo ""
+
+    # Clean up the temporary file
+    rm -f "$TARGET_FILE"
+    echo "Cleaned up $TARGET_FILE."
+
+    #!/usr/bin/env bash
+    output_file="src_snapshot.md"
+    src_dir="./src"
+
+    # Clear the output file or create it if it doesn't exist
+    > "$output_file"
+
