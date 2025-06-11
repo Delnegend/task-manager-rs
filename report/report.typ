@@ -29,7 +29,7 @@
 
   #align(center)[#text(20pt, weight: "bold")[Task Manager for Linux]]
 
-  // #pad(top: 4em)[#text(size: 1.5em)[Supervisor: Mr. ]]
+  #pad(top: 4em)[#text(size: 1.5em)[Mentor: Mr. Nguyễn Ngọc Anh]]
 
   #align(center + bottom)[#text(20pt)[*Hanoi, 2025*]]
 ]
@@ -131,9 +131,13 @@ The system is designed with a clear separation of concerns, dividing functionali
 
 The application follows a client-server-like architecture where the Slint UI acts as the client and the Rust backend processes system data. The interaction is facilitated by Slint's event loop and shared state mechanisms.
 
+#figure(image("overview.png", width: 60%), caption: "System Architecture Overview")
+
 - *UI Layer (`ui/app.slint`):* Handles user interaction, displays data, and triggers backend operations.
 - *Backend/Manager Layer (`main.rs`, `manager/`):* Fetches, processes, and organizes process data. Implements business logic for sorting, filtering, and process control.
 - *Utility Layer (`utils/`):* Provides general-purpose helper functions.
+
+
 
 == Data Structures
 
@@ -249,12 +253,18 @@ The `app.slint` file defines the entire user interface.
   - `AppWindow::new()` creates the UI instance from the Slint UI definition, auto-generated using the `slint::include_modules!()` #footnote[#link("https://docs.rs/slint/latest/slint/macro.include_modules.html")[docs.rs/slint/latest/slint/macro.include_modules.html]] macro.
   - `BackendAppState` holds the application's mutable state behind a read-write lock and an `Arc` pointer, allowing safe sharing and mutability across threads.
   - `tokio::spawn` #footnote[#link("https://docs.rs/tokio/latest/tokio/task/fn.spawn.html")[docs.rs/tokio/latest/tokio/task/fn.spawn.html]] creates a background thread for refreshing process data.
+
+#pagebreak()
+
 - *Process Data Refresh Loop:*
   - The refresh thread runs an infinite loop, fetching processes using `get_sorted_process_list`.
   - `slint::invoke_from_event_loop` #footnote[#link("https://docs.rs/slint/latest/slint/fn.invoke_from_event_loop.html")[docs.rs/slint/latest/slint/fn.invoke_from_event_loop.html]] is used to update UI properties from the background thread safely.
   - It waits for either a 3-second timeout or a refresh signal (from UI sort/search changes), ensuring both periodic and immediate updates.
+
 - *Process Information Retrieval:* The `manager/traits/to_my_processes.rs` module converts raw `procfs`'s processes data into structured `MyProcess` objects, adding derived information like CPU percentage and memory usage.
+
 - *Search and Sort Implementation:* The `get_sorted_process_list` function (in `manager/get_sorted_process_list.rs`) is responsible for applying search filters and sorting to the process list before it's displayed. It handles the parsing of search queries and constructs the parent-child tree.
+
 - *Process Termination:* When the "Terminate" button is clicked and confirmed, the `confirm_terminate_process` callback in `main.rs` uses `nix`'s `signal::kill` to send a `SIGTERM` to the target process.
 
 == Unit Tests
@@ -301,6 +311,9 @@ package-deb: build-release
 ```
 
 The Cargo.toml includes metadata for both `cargo-deb` and `cargo-generate-rpm` to define package specifics, such as maintainer information, copyright details, license file paths, extended descriptions, and the target installation path and permissions for the executable:
+
+#pagebreak()
+
 ```toml
 [package.metadata.deb]
 maintainer = "..."
@@ -313,8 +326,6 @@ assets = [
     { source = "target/release/task-manager-rs", dest = "/usr/bin/task-manager-rs", mode = "0755" },
 ]
 ```
-
-#pagebreak()
 
 = Results
 
@@ -334,7 +345,7 @@ The Task Manager tool successfully addresses the majority of the specified requi
 #pagebreak()
 
 - *Kill a selected process:* The "Terminate" button, after a confirmation dialog, successfully sends a SIGTERM to the selected process, as verified during testing.
-  #figure(image("image.png"), caption: "Process Termination Confirmation")
+  #figure(image("terminate-process.png"), caption: "Process Termination Confirmation")
 
 - *Compatible with Linux distros (Ubuntu 24.04, CentOS 7):* The reliance on procfs and nix crates, which interface directly with the Linux kernel's `/proc` filesystem and system calls, ensures compatibility across most modern Linux distributions.
 
