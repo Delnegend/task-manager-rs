@@ -16,12 +16,16 @@ export component AppWindow inherits Window {
     private property <int> selected-process-idx: -1;
 
     title: "Task Manager";
+
+    max-width: 9999px;
+    max-height: 9999px;
+
     min-width: 800px;
-    preferred-width: 1200px;
-    max-height: 1080px;
-    max-width: 1920px;
     min-height: 600px;
-    preferred-height: 800px;
+
+    preferred-width: 1280px;
+    preferred-height: 720px;
+
     resize-border-width: 4px;
 
     confirm-terminate-popup := PopupWindow {
