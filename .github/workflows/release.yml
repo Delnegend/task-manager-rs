@@ -1,0 +1,99 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install just
+        uses: extractions/setup-just@v3
+
+      - name: Build packages
+        run: |
+          just package-deb
+          just package-rpm
+
+      - name: Prepare and Compress Artifacts
+        id: compress
+        shell: bash # Ensure bash for array handling and shopt
+        run: |
+          RELEASE_VERSION_TAG=${{ github.event.inputs.version }}
+          DIST_DIR="dist"
+
+          # Find the generated .deb and .rpm files
+          # Based on user-provided examples:
+          # dist/task-manager-rs_0.1.0-1_amd64.deb
+          # dist/task-manager-rs-0.1.0-1.x86_64.rpm
+          DEB_FILE_PATTERN="$DIST_DIR/task-manager-rs_*.deb"
+          RPM_FILE_PATTERN="$DIST_DIR/task-manager-rs-*.rpm"
+
+          shopt -s nullglob # Avoid errors if no files match, arrays will be empty
+          DEB_FILES=($DEB_FILE_PATTERN)
+          RPM_FILES=($RPM_FILE_PATTERN)
+          shopt -u nullglob # Reset nullglob
+
+          if [ ${#DEB_FILES[@]} -ne 1 ]; then
+            echo "Error: Expected 1 .deb file matching '$DEB_FILE_PATTERN', found ${#DEB_FILES[@]}"
+            ls -R "$DIST_DIR"
+            exit 1
+          fi
+          ACTUAL_DEB_FILE="${DEB_FILES[0]}"
+
+          if [ ${#RPM_FILES[@]} -ne 1 ]; then
+            echo "Error: Expected 1 .rpm file matching '$RPM_FILE_PATTERN', found ${#RPM_FILES[@]}"
+            ls -R "$DIST_DIR"
+            exit 1
+          fi
+          ACTUAL_RPM_FILE="${RPM_FILES[0]}"
+
+          # Define target basenames for files inside tarball (version removed from filename)
+          # Assuming amd64 for .deb and x86_64 for .rpm as per example structure
+          RENAMED_DEB_BASENAME="task-manager-rs_amd64.deb"
+          RENAMED_RPM_BASENAME="task-manager-rs_x86_64.rpm"
+
+          # Move original build artifacts to their new, version-less names
+          mv "$ACTUAL_DEB_FILE" "$DIST_DIR/$RENAMED_DEB_BASENAME"
+          mv "$ACTUAL_RPM_FILE" "$DIST_DIR/$RENAMED_RPM_BASENAME"
+
+          # Define tarball names, incorporating the release version tag
+          TAR_DEB_FILENAME="task-manager-rs-${RELEASE_VERSION_TAG}-linux-amd64.deb.tar.gz"
+          TAR_RPM_FILENAME="task-manager-rs-${RELEASE_VERSION_TAG}-linux-x86_64.rpm.tar.gz"
+
+          # Compress the renamed files
+          tar -czvf "$DIST_DIR/$TAR_DEB_FILENAME" -C "$DIST_DIR" "$RENAMED_DEB_BASENAME"
+          tar -czvf "$DIST_DIR/$TAR_RPM_FILENAME" -C "$DIST_DIR" "$RENAMED_RPM_BASENAME"
+
+          echo "Created $DIST_DIR/$TAR_DEB_FILENAME (contains $RENAMED_DEB_BASENAME)"
+          echo "Created $DIST_DIR/$TAR_RPM_FILENAME (contains $RENAMED_RPM_BASENAME)"
+
+          # Set outputs for the release step
+          echo "deb_tarball_path=$DIST_DIR/$TAR_DEB_FILENAME" >> $GITHUB_OUTPUT
+          echo "rpm_tarball_path=$DIST_DIR/$TAR_RPM_FILENAME" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.compress.outputs.deb_tarball_path }}
+            ${{ steps.compress.outputs.rpm_tarball_path }}
+          tag_name: ${{ github.event.inputs.version }}
+          make_latest: true
+          token: ${{ secrets.hehe }}
