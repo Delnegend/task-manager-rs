@@ -64,6 +64,9 @@ lint:
 build-release:
     cargo build --release
 
+run-release:
+    ./target/release/task-manager-rs
+
 package-rpm: build-release
     @mkdir -p ./dist
     cargo generate-rpm
