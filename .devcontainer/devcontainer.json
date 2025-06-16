@@ -28,7 +28,8 @@
             "extensions": [
                 "rust-lang.rust-analyzer",
                 "myriad-dreamin.tinymist",
-                "Slint.slint"
+                "Slint.slint",
+                "ms-azuretools.vscode-containers"
             ]
         }
     },
