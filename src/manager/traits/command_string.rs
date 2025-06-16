@@ -8,5 +8,6 @@ impl CommandString for Process {
     fn command(&self) -> String {
         self.cmdline()
             .map_or_else(|_| "unknown".to_string(), |c| c.join(" "))
+            .replace('\n', " ")
     }
 }
