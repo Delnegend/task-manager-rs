@@ -64,8 +64,29 @@ lint:
 build-release:
     cargo build --release
 
+build-release-ubuntu:
+    #!/usr/bin/env bash
+    if [ ! -f "./target/release/task-manager-rs" ]; then
+        echo "Release build not found. Please run 'just build-release' inside devcontainer."
+        exit 1
+    fi
+    docker build -t task-manager-rs:ubuntu -f Dockerfile.ubuntu .
+
 run-release:
     ./target/release/task-manager-rs
+
+run-release-ubuntu:
+    docker run -it --rm \
+        -v "./target/release/task-manager-rs:/task-manager-rs" \
+        -v "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:/tmp/wayland-0" \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        --device /dev/dri:/dev/dri \
+        -e WAYLAND_DISPLAY=wayland-0 \
+        -e XDG_RUNTIME_DIR=/tmp \
+        -e QT_QPA_PLATFORM=wayland \
+        -e MOZ_ENABLE_WAYLAND=1 \
+        -e SDL_VIDEODRIVER=wayland \
+        task-manager-rs:ubuntu
 
 package-rpm: build-release
     @mkdir -p ./dist

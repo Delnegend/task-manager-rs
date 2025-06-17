@@ -1,0 +1,7 @@
+FROM ubuntu:24.04
+
+RUN apt-get update && apt-get install -y qt6-base-dev qt6-wayland && apt-get clean
+
+COPY ./target/release/task-manager-rs /usr/local/bin/task-manager-rs
+
+ENTRYPOINT [ "/usr/local/bin/task-manager-rs" ]
